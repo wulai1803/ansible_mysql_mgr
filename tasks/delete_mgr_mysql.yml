@@ -1,0 +1,16 @@
+---
+  - name: Copy delete_processlist scripts 
+    template: src=delete_processlist.j2 dest=/tmp/delete_processlist.sh  
+  - name: exec delete_processlist scripts 
+    shell: /bin/bash /tmp/delete_processlist.sh
+    ignore_errors: yes
+  - name: Delete delete_processlist
+    file:
+          path: '/tmp/delete_processlist.sh' 
+          state: absent
+  - name: delete mysql_basedir
+    shell: rm -rf /app/mysql_app_{{mysql_port}}
+    ignore_errors: yes
+  - name: delete mysql_basedir
+    shell: rm -rf /data1/mysql_data_{{mysql_port}}
+    ignore_errors: yes

@@ -1,0 +1,1 @@
+ps -ef|grep mysqld|grep _{{mysql_port}}|awk {'print $2'}|xargs kill -9

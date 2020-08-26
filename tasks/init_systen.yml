@@ -1,0 +1,52 @@
+---
+  - name: 安装基础软件包
+    yum:
+      name:
+        - unzip
+        - zip
+        - lrzsz
+        - java
+        - net-tools
+        - gcc
+        - gcc-c++
+        - libaio
+        - libxml2
+        - libxml2-devel
+        - curl
+        - curl-devel
+        - cmake
+        - ncurses-devel
+        - bison 
+        - openssl
+        - openssl-devel
+      state: present
+  - name: Create Mysql User In Redhat Client
+    user: name={{ mysql_os_user }} state=present createhome=no shell=/sbin/nologin
+  - name: write temp hosts info
+    shell: 'echo "{{etc_hosts}}" >/tmp/tmp_host.txt'
+  - name: Copy update hosts scripts 
+    template: src=update_hosts.j2 dest=/tmp/update_hosts.sh  
+  - name: update system hosts
+    shell: /bin/bash /tmp/update_hosts.sh
+  - name: Delete temp hosts info
+    file:
+          path: '/tmp/tmp_host.txt' 
+          state: absent
+  - name: Delete pdate hosts scripts
+    file:
+          path: '/tmp/update_hosts.sh' 
+          state: absent   
+  - name: Copy limits.conf
+    template: src=limits.conf.j2 dest=/tmp/limits.conf
+  - name: Copy update limits scripts 
+    template: src=update_system_limits.j2 dest=/tmp/update_system_limits.sh
+  - name: update limits scripts 
+    shell: /bin/bash /tmp/update_system_limits.sh 
+  - name: Delete temp limits.conf
+    file:
+          path: '/tmp/limits.conf' 
+          state: absent
+  - name: Delete limits scripts 
+    file:
+          path: '/tmp/update_system_limits.sh' 
+          state: absent 

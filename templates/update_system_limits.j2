@@ -1,0 +1,9 @@
+while read line; do
+if [ -n "$line" ];then 
+      grep -w "$line" /etc/security/limits.conf >/dev/null 2>&1
+	  if [ $? -ne 0 ];then
+        echo $line >>/etc/security/limits.conf
+        #echo $line 		
+      fi
+fi
+done < /tmp/limits.conf

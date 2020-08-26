@@ -1,0 +1,2 @@
+i=1;
+while read line; do if [ -n "$line" ];then line=$line$i; if `! grep -qw "$line" /etc/hosts >/dev/null 2>&1`;then      echo $line >>/etc/hosts; fi; i=$((i+1)); fi; done < /tmp/tmp_host.txt

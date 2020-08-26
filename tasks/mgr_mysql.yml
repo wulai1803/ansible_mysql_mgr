@@ -1,0 +1,63 @@
+#   - name: Copy alter mysql root passwd scritps
+#     template: src=update_mysql_passwd.j2 dest=/tmp/update_mysql_passwd.sh  
+#   - name: alter mysql root passwd
+#     shell: /bin/bash /tmp/update_mysql_passwd.sh
+#     ignore_errors: yes
+#   - name: Delete alter mysql root passwd scritps
+#     file:
+#             path: '/tmp/update_mysql_passwd.sh' 
+#             state: absent  
+    - name: Copy Mysql create replica sql  To server
+      template: src=create_replicate_user.j2 dest=/tmp/create_replicate_user.sql    
+    - name: create mysql replica user
+      shell: '{{ mysql_basedir }}/bin/mysql  -uroot  -p{{ mysql_root_passwd }} -S {{ mysql_datadir }}/tmp/mysql_{{mysql_port}}.sock < /tmp/create_replicate_user.sql'
+      ignore_errors: yes
+    - name: Delete Mysql create replica sql 
+      file:
+          path: '/tmp/create_replicate_user.sql' 
+          state: absent
+    - name: Set primary node facts
+      debug: msg="{{group_replication_bootstraper}}"
+    - name: Copy primary node change master sql
+      template: src=rep_change_primary.j2 dest=/tmp/rep_change_primary.sql
+      run_once: true
+      when: ansible_default_ipv4.address  == group_replication_bootstraper
+    - name: exce primary node change master sql
+      shell: '{{ mysql_basedir }}/bin/mysql  -uroot  -p{{ mysql_root_passwd }} -S {{ mysql_datadir }}/tmp/mysql_{{mysql_port}}.sock < /tmp/rep_change_primary.sql'
+      ignore_errors: yes
+      run_once: true      
+      when: ansible_default_ipv4.address == group_replication_bootstraper
+    - name: Delete primary node change master sql
+      file:
+          path: '/tmp/rep_change_primary.sql' 
+          state: absent
+      run_once: true
+      when: ansible_default_ipv4.address == group_replication_bootstraper      
+    - name: get primary node info
+      shell: 'sleep 30;{{ mysql_basedir }}/bin/mysql  -uroot  -p{{ mysql_root_passwd }} -S {{ mysql_datadir }}/tmp/mysql_{{mysql_port}}.sock -e "SELECT * FROM performance_schema.replication_group_members\G"'
+      ignore_errors: yes 
+      register: primary_status
+      run_once: true
+      when: ansible_default_ipv4.address == group_replication_bootstraper
+    - name: Copy other node change master sql
+      template: src=rep_change_other.j2 dest=/tmp/rep_change_other.sql
+      when:  ansible_default_ipv4.address  != group_replication_bootstraper
+    - name: exce other node change master sql
+      shell: '{{ mysql_basedir }}/bin/mysql  -uroot  -p{{ mysql_root_passwd }} -S {{ mysql_datadir }}/tmp/mysql_{{mysql_port}}.sock < /tmp/rep_change_other.sql'
+      ignore_errors: yes     
+      when: ansible_default_ipv4.address != group_replication_bootstraper
+    - name: Delete primary node change master sql
+      file:
+          path: '/tmp/rep_change_other.sql' 
+          state: absent
+      when: ansible_default_ipv4.address != group_replication_bootstraper 
+    - name: get primary node info
+      shell: 'sleep 30;{{ mysql_basedir }}/bin/mysql  -uroot  -p{{ mysql_root_passwd }} -S {{ mysql_datadir }}/tmp/mysql_{{mysql_port}}.sock -e "SELECT * FROM performance_schema.replication_group_members\G"'
+      ignore_errors: yes 
+      register: primary_status
+      run_once: true
+      when: ansible_default_ipv4.address == group_replication_bootstraper
+    - name: get primary node info
+      debug: msg="{{primary_status.stdout}}"
+      run_once: true
+      when: ansible_default_ipv4.address == group_replication_bootstraper

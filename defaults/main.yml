@@ -1,0 +1,36 @@
+#端口
+mysql_port: 8801
+mysql_mgr_port: "{{ mysql_port +10000 }}"
+#文件名
+mysql_install_file: mysql-8.0.21.tar.gz
+#程序目录
+mysql_basedir: /app/mysql_app_{{mysql_port}}
+#数据目录
+mysql_datadir: /data1/mysql_data_{{mysql_port}}
+#数据库启动系统用户名密码
+mysql_os_user: mysql
+#系统主机名
+system_name: 'mgr'
+#数据库用户密码
+#root密码
+mysql_root_passwd: 'root123'
+#同步用户密码#
+mysql_rep_user: "repl"
+mysql_rep_password: "GJHJG554HH"
+#mgr组名
+#mysql_group_replication_name: 'b13df29e-90b6-11e8-8d1b-525400fc3996'
+#Ansible 主机清单中的组名
+mysql_inventory_group: mysql_mgr 
+#动态主机清单中的第一个主机,即为master IP:
+master_host_info: "{{ mysql_mgr }}"
+#mgr类型，multi_primary 为多主 single_primary 为单主
+mgr_type: 'multi_primary'
+#master_ip: "{{ ansible_eth0['ipv4']['address'] }}"
+group_replication_bootstraper_list: "{{ groups[mysql_inventory_group] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list | join(',')}}"
+group_replication_bootstraper: "{{ group_replication_bootstraper_list.split(',')[0] }}"
+etc_hosts: |
+          {% for ip_list in (groups[mysql_inventory_group] | map('extract', hostvars, ['ansible_all_ipv4_addresses'])) -%} {% set iploop = loop %}
+          {% for ip in ip_list -%}
+          {{ ip }}  {{system_name}}{{ groups[mysql_inventory_group].index(inventory_hostname)}}
+          {% endfor %}
+          {% endfor %}

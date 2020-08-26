@@ -1,0 +1,16 @@
+
+{% if mgr_type == 'multi_primary' -%}
+STOP GROUP_REPLICATION;
+reset master;
+reset slave all;
+CHANGE MASTER TO MASTER_USER='{{ mysql_rep_user }}', MASTER_PASSWORD='{{ mysql_rep_password }}' FOR CHANNEL 'group_replication_recovery';
+set global group_replication_single_primary_mode=OFF;
+set global group_replication_enforce_update_everywhere_checks=ON;
+START GROUP_REPLICATION;
+{% else %}
+STOP GROUP_REPLICATION;
+reset master;
+reset slave all;
+CHANGE MASTER TO MASTER_USER='{{ mysql_rep_user }}', MASTER_PASSWORD='{{ mysql_rep_password }}' FOR CHANNEL 'group_replication_recovery';
+START GROUP_REPLICATION;
+{% endif %}

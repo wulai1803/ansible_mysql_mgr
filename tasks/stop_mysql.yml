@@ -1,0 +1,3 @@
+  - name: stop mysql
+    shell: "{{ mysql_basedir }}/bin/mysqladmin  --defaults-file={{ mysql_basedir }}/etc/my.cnf  -uroot  -p'{{ mysql_root_passwd }}' -S {{ mysql_datadir }}/tmp/mysql_{{mysql_port}}.sock shutdown"
+    ignore_errors: yes  

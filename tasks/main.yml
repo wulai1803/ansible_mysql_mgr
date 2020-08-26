@@ -1,0 +1,24 @@
+- name: Import init_systen tasks
+  import_tasks: init_systen.yml
+  when:
+    - openate_type == 'install'
+- name: Import install_mysql tasks
+  import_tasks: install_mysql.yml
+  when:
+    - openate_type == 'install'
+- name: Import mgr_mysql tasks
+  import_tasks: mgr_mysql.yml
+  when:
+    - openate_type == 'install'
+- name: Import delete mgr_mysql
+  import_tasks: delete_mgr_mysql.yml
+  when:
+    - openate_type == 'delete'
+- name: Import start_mysql.yml
+  import_tasks: start_mysql.yml
+  when:
+    - openate_type == 'start'
+- name: Import stop_mysql.yml
+  import_tasks: stop_mysql.yml
+  when:
+    - openate_type == 'stop'

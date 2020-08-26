@@ -1,0 +1,51 @@
+  - name: Create Mysql basedir Dir
+    file: dest={{ mysql_basedir }} state=directory 
+  - name: Copy Mysql Software To server
+    copy: src={{mysql_install_file}} dest={{mysql_basedir}}/{{mysql_install_file}}
+  - name: Uncompression Mysql Software To Redhat Client
+    shell: tar zxf {{mysql_basedir}}/{{mysql_install_file}} -C {{mysql_basedir}}
+  - name: Delete Mysql compression Software In Redhat Client
+    file:
+        path: '{{mysql_basedir}}/{{mysql_install_file}}' 
+        state: absent
+  - name: Create Mysql basedir etc Dir
+    file: dest={{ mysql_basedir }}/etc state=directory
+  - name: COPY Mysql my.cnf
+    template: src=my.cnf.j2 dest={{ mysql_basedir }}/etc/my.cnf
+  - name: replace Mysql my.cnf
+    replace: 
+        path: '{{ mysql_basedir }}/etc/my.cnf' 
+        regexp: 'mysql_mgr_port'
+        replace: '{{ mysql_mgr_port }}'
+  - name: Create Mysql datadir Dir
+    file: dest={{ mysql_datadir }} state=directory
+  - name: Create Mysql datadir tmp logs binlog relaylog Dir
+    file: dest={{ item }} state=directory
+    with_items:
+      - '{{ mysql_datadir }}/binlog'
+      - '{{ mysql_datadir }}/relaylog'
+      - '{{ mysql_datadir }}/tmp'
+      - '{{ mysql_datadir }}/logs'       
+  - name: Modify Mysql Dir Permission In Redhat Client
+    file: path={{ item }} owner={{ mysql_os_user }} group={{ mysql_os_user }} recurse=yes mode=0755
+    with_items:
+      - "{{ mysql_datadir }}"
+      - "{{ mysql_basedir }}"
+  - name: Delete mysql default conf
+    file:
+          path: '/etc/my.cnf' 
+          state: absent
+    ignore_errors: yes          
+  - name: Init mysql data
+    shell: '{{ mysql_basedir }}/bin/mysqld  --defaults-file={{ mysql_basedir }}/etc/my.cnf  --user={{ mysql_os_user }}  --initialize-insecure' 
+  - name: Start mysql server
+    shell: '{{ mysql_basedir }}/bin/mysqld_safe  --defaults-file={{ mysql_basedir }}/etc/my.cnf  --user={{ mysql_os_user }}  &' 
+  - name: Copy alter mysql root passwd scritps
+    template: src=update_mysql_passwd.j2 dest=/tmp/update_mysql_passwd.sh  
+  - name: alter mysql root passwd
+    shell: /bin/bash /tmp/update_mysql_passwd.sh
+    ignore_errors: yes
+  - name: Delete alter mysql root passwd scritps
+    file:
+          path: '/tmp/update_mysql_passwd.sh' 
+          state: absent      
